@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "917496097526",
+    "project_id": "tarelchar",
+    "storage_bucket": "tarelchar.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:917496097526:android:1addab2a6fe41f3e9a1ad7",
+        "android_client_info": {
+          "package_name": "com.example.tar_el_char"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBthwSVfbrUkxULFfIHo5laUjc6twTXEmg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
