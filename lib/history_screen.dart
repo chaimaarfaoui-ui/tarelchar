@@ -131,8 +131,8 @@ class HistoryScreen extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         border: Border.all(
-          color: const Color(0xFFB8860B).withOpacity(0.3),
-          width: 0.5,
+          color: _triageColor(triage).withValues(alpha: 0.4),
+          width: 0.6,
         ),
         borderRadius: BorderRadius.circular(12),
       ),
