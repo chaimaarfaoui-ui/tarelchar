@@ -27,6 +27,18 @@ class _ResultScreenState extends State<ResultScreen> {
   String _triageLevel = '';
   bool _loading = true;
 
+  // Reflection notes
+  final TextEditingController _reflectionController = TextEditingController();
+  String? _consultationDocId;
+  bool _savingReflection = false;
+  bool _reflectionSaved = false;
+
+  @override
+  void dispose() {
+    _reflectionController.dispose();
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -72,7 +84,7 @@ class _ResultScreenState extends State<ResultScreen> {
     if (user == null) return;
 
     try {
-      await FirebaseFirestore.instance
+      final docRef = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
           .collection('consultations')
@@ -86,10 +98,62 @@ class _ResultScreenState extends State<ResultScreen> {
             'herbName': parsed['herbName'],
             'herbDescription': parsed['herbDescription'],
             'warning': parsed['warning'],
+            'reflectionNote': '',
             'createdAt': FieldValue.serverTimestamp(),
           });
+      setState(() {
+        _consultationDocId = docRef.id;
+      });
     } catch (e) {
       debugPrint('Failed to save consultation: $e');
+    }
+  }
+
+  Future<void> _saveReflection() async {
+    final user = FirebaseAuth.instance.currentUser;
+    final note = _reflectionController.text.trim();
+
+    if (user == null || _consultationDocId == null || note.isEmpty) return;
+
+    setState(() {
+      _savingReflection = true;
+    });
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('consultations')
+          .doc(_consultationDocId)
+          .update({
+            'reflectionNote': note,
+            'reflectionUpdatedAt': FieldValue.serverTimestamp(),
+          });
+
+      if (!mounted) return;
+      setState(() {
+        _savingReflection = false;
+        _reflectionSaved = true;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Your reflection has been sealed in the grimoire.'),
+          backgroundColor: Color(0xFFB8860B),
+        ),
+      );
+    } catch (e) {
+      debugPrint('Failed to save reflection: $e');
+      if (!mounted) return;
+      setState(() {
+        _savingReflection = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('The grimoire would not accept your words. Try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -276,6 +340,8 @@ class _ResultScreenState extends State<ResultScreen> {
                       ),
                       const SizedBox(height: 24),
                       _herbalistSection(herbName),
+                      const SizedBox(height: 24),
+                      _reflectionSection(),
                     ] else ...[
                       Center(
                         child: Text(
@@ -298,6 +364,85 @@ class _ResultScreenState extends State<ResultScreen> {
                 ),
               ),
       ),
+    );
+  }
+
+  Widget _reflectionSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          '📝 Your Reflection',
+          style: TextStyle(
+            color: Color(0xFFB8860B),
+            fontSize: 13,
+            letterSpacing: 1,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: const Color(0xFFB8860B).withValues(alpha: 0.4),
+              width: 0.6,
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: TextField(
+            controller: _reflectionController,
+            maxLines: 3,
+            style: const TextStyle(color: Colors.white70, fontSize: 14),
+            onChanged: (_) {
+              if (_reflectionSaved) {
+                setState(() => _reflectionSaved = false);
+              }
+            },
+            decoration: const InputDecoration(
+              hintText:
+                  'How did this consultation serve you? What did you learn...',
+              hintStyle: TextStyle(color: Colors.white24, fontSize: 13),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.all(16),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton(
+            onPressed: (_savingReflection || _consultationDocId == null)
+                ? null
+                : _saveReflection,
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Color(0xFFB8860B), width: 0.8),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: _savingReflection
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Color(0xFFB8860B),
+                    ),
+                  )
+                : Text(
+                    _reflectionSaved
+                        ? '✦ Sealed in the Grimoire'
+                        : 'Seal Reflection',
+                    style: const TextStyle(
+                      color: Color(0xFFB8860B),
+                      fontSize: 13,
+                      letterSpacing: 1,
+                    ),
+                  ),
+          ),
+        ),
+      ],
     );
   }
 
