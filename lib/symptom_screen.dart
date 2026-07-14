@@ -10,7 +10,10 @@ class SymptomScreen extends StatefulWidget {
 
 class _SymptomScreenState extends State<SymptomScreen> {
   final _controller = TextEditingController();
+  final _medicineController = TextEditingController();
   final List<String> _selectedSymptoms = [];
+
+  bool _medicineMode = false;
 
   final List<String> quickSymptoms = [
     'Fever',
@@ -22,6 +25,216 @@ class _SymptomScreenState extends State<SymptomScreen> {
     'Dizziness',
     'Sore Throat',
   ];
+
+  Widget _modeToggle() {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: const Color(0xFFB8860B), width: 0.5),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _medicineMode = false),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: !_medicineMode
+                      ? const Color(0xFFB8860B)
+                      : Colors.transparent,
+                  borderRadius: const BorderRadius.horizontal(
+                    left: Radius.circular(7),
+                  ),
+                ),
+                child: Text(
+                  'Symptoms',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: !_medicineMode
+                        ? Colors.black
+                        : const Color(0xFFB8860B),
+                    fontSize: 13,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _medicineMode = true),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: _medicineMode
+                      ? const Color(0xFFB8860B)
+                      : Colors.transparent,
+                  borderRadius: const BorderRadius.horizontal(
+                    right: Radius.circular(7),
+                  ),
+                ),
+                child: Text(
+                  'Name a Medicine',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: _medicineMode
+                        ? Colors.black
+                        : const Color(0xFFB8860B),
+                    fontSize: 13,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _symptomInputs() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Describe your symptoms',
+          style: TextStyle(color: Colors.white54, fontSize: 13),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _controller,
+          style: const TextStyle(color: Colors.white),
+          maxLines: 3,
+          decoration: InputDecoration(
+            hintText: 'e.g. I have a fever and a sore throat...',
+            hintStyle: const TextStyle(color: Colors.white24),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(
+                color: Color(0xFFB8860B),
+                width: 0.5,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFFB8860B)),
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+        const Text(
+          'Or select common symptoms',
+          style: TextStyle(color: Colors.white54, fontSize: 13),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: quickSymptoms.map((symptom) {
+            final isSelected = _selectedSymptoms.contains(symptom);
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  if (isSelected) {
+                    _selectedSymptoms.remove(symptom);
+                  } else {
+                    _selectedSymptoms.add(symptom);
+                  }
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? const Color(0xFFB8860B)
+                      : Colors.transparent,
+                  border: Border.all(
+                    color: const Color(0xFFB8860B),
+                    width: 0.5,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  symptom,
+                  style: TextStyle(
+                    color: isSelected ? Colors.black : const Color(0xFFB8860B),
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _medicineInput() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Name the medicine you seek knowledge of',
+          style: TextStyle(color: Colors.white54, fontSize: 13),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _medicineController,
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            hintText: 'e.g. Ibuprofen, Paracetamol...',
+            hintStyle: const TextStyle(color: Colors.white24),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(
+                color: Color(0xFFB8860B),
+                width: 0.5,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFFB8860B)),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        const Text(
+          'The oracle offers informational lore only — never a prescription or dosage.',
+          style: TextStyle(color: Colors.white24, fontSize: 11, height: 1.5),
+        ),
+      ],
+    );
+  }
+
+  void _consult() {
+    if (_medicineMode) {
+      final medicine = _medicineController.text.trim();
+      if (medicine.isEmpty) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              ResultScreen(mode: 'medicine', medicine: medicine),
+        ),
+      );
+    } else {
+      final text = _controller.text.trim();
+      final symptoms = [..._selectedSymptoms];
+      if (text.isNotEmpty) symptoms.add(text);
+      if (symptoms.isEmpty) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              ResultScreen(mode: 'symptoms', symptoms: symptoms),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,96 +257,14 @@ class _SymptomScreenState extends State<SymptomScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Describe your symptoms',
-              style: TextStyle(color: Colors.white54, fontSize: 13),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _controller,
-              style: const TextStyle(color: Colors.white),
-              maxLines: 3,
-              decoration: InputDecoration(
-                hintText: 'e.g. I have a fever and a sore throat...',
-                hintStyle: const TextStyle(color: Colors.white24),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(
-                    color: Color(0xFFB8860B),
-                    width: 0.5,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFB8860B)),
-                ),
-              ),
-            ),
+            _modeToggle(),
             const SizedBox(height: 24),
-            const Text(
-              'Or select common symptoms',
-              style: TextStyle(color: Colors.white54, fontSize: 13),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: quickSymptoms.map((symptom) {
-                final isSelected = _selectedSymptoms.contains(symptom);
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      if (isSelected) {
-                        _selectedSymptoms.remove(symptom);
-                      } else {
-                        _selectedSymptoms.add(symptom);
-                      }
-                    });
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? const Color(0xFFB8860B)
-                          : Colors.transparent,
-                      border: Border.all(
-                        color: const Color(0xFFB8860B),
-                        width: 0.5,
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      symptom,
-                      style: TextStyle(
-                        color: isSelected
-                            ? Colors.black
-                            : const Color(0xFFB8860B),
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
+            _medicineMode ? _medicineInput() : _symptomInputs(),
             const Spacer(),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  final text = _controller.text.trim();
-                  final symptoms = [..._selectedSymptoms];
-                  if (text.isNotEmpty) symptoms.add(text);
-                  if (symptoms.isEmpty) return;
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ResultScreen(symptoms: symptoms),
-                    ),
-                  );
-                },
+                onPressed: _consult,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFB8860B),
                   padding: const EdgeInsets.symmetric(vertical: 18),

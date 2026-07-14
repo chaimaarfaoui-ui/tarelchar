@@ -1,11 +1,22 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'config.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'herbalists.dart';
 
 class ResultScreen extends StatefulWidget {
-  final List<String> symptoms;
-  const ResultScreen({super.key, required this.symptoms});
+  final String mode; // 'symptoms' or 'medicine'
+  final List<String>? symptoms;
+  final String? medicine;
+
+  const ResultScreen({
+    super.key,
+    this.mode = 'symptoms',
+    this.symptoms,
+    this.medicine,
+  });
 
   @override
   State<ResultScreen> createState() => _ResultScreenState();
@@ -23,45 +34,25 @@ class _ResultScreenState extends State<ResultScreen> {
   }
 
   Future<void> _callGroq() async {
-    final symptomsText = widget.symptoms.join(', ');
     try {
+      final Map<String, dynamic> body = widget.mode == 'medicine'
+          ? {'mode': 'medicine', 'medicine': widget.medicine ?? ''}
+          : {'mode': 'symptoms', 'symptoms': widget.symptoms ?? []};
+
       final response = await http.post(
-        Uri.parse('https://api.groq.com/openai/v1/chat/completions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${Config.claudeApiKey}',
-        },
-        body: jsonEncode({
-          'model': 'llama-3.3-70b-versatile',
-          'messages': [
-            {
-              'role': 'system',
-              'content':
-                  'You are Tar el Char, an ancient mystical health oracle. Always respond with valid JSON only, no extra text, no markdown.',
-            },
-            {
-              'role': 'user',
-              'content':
-                  'A seeker presents these symptoms: $symptomsText\n\nRespond in this exact JSON format:\n{\n  "triage": "self-care",\n  "guidance": "2-3 sentences of mystical but practical health guidance",\n  "remedy": "one ancient herbal or natural remedy suggestion",\n  "warning": "one clear warning sign that would require immediate medical attention"\n}\n\nTriage must be exactly one of: self-care, see-doctor, emergency.',
-            },
-          ],
-          'temperature': 0.7,
-        }),
+        Uri.parse('https://tar-el-char-api.vercel.app/api/consult-oracle'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(body),
       );
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final text = data['choices'][0]['message']['content'];
-        final clean = text
-            .replaceAll('```json', '')
-            .replaceAll('```', '')
-            .trim();
-        final parsed = jsonDecode(clean);
+        final parsed = jsonDecode(response.body);
         setState(() {
           _triageLevel = parsed['triage'];
           _result = jsonEncode(parsed);
           _loading = false;
         });
+        _saveConsultation(parsed);
       } else {
         setState(() {
           _result = 'Error ${response.statusCode}: ${response.body}';
@@ -73,6 +64,39 @@ class _ResultScreenState extends State<ResultScreen> {
         _result = 'Error: ${e.toString()}';
         _loading = false;
       });
+    }
+  }
+
+  Future<void> _saveConsultation(Map<String, dynamic> parsed) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('consultations')
+          .add({
+            'mode': widget.mode,
+            'symptoms': widget.symptoms,
+            'medicine': widget.medicine,
+            'triage': parsed['triage'],
+            'guidance': parsed['guidance'],
+            'remedy': parsed['remedy'],
+            'herbName': parsed['herbName'],
+            'herbDescription': parsed['herbDescription'],
+            'warning': parsed['warning'],
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+    } catch (e) {
+      debugPrint('Failed to save consultation: $e');
+    }
+  }
+
+  Future<void> _openLink(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 
@@ -106,6 +130,8 @@ class _ResultScreenState extends State<ResultScreen> {
         parsed = jsonDecode(_result);
       } catch (_) {}
     }
+
+    final herbName = parsed['herbName'] ?? parsed['remedy'] ?? '';
 
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D0D),
@@ -144,39 +170,66 @@ class _ResultScreenState extends State<ResultScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Your afflictions',
-                      style: TextStyle(color: Colors.white38, fontSize: 13),
+                    Text(
+                      widget.mode == 'medicine'
+                          ? 'Your inquiry'
+                          : 'Your afflictions',
+                      style: const TextStyle(
+                        color: Colors.white38,
+                        fontSize: 13,
+                      ),
                     ),
                     const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: widget.symptoms
-                          .map(
-                            (s) => Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: const Color(0xFFB8860B),
-                                  width: 0.5,
+                    if (widget.mode == 'medicine')
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: const Color(0xFFB8860B),
+                            width: 0.5,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          widget.medicine ?? '',
+                          style: const TextStyle(
+                            color: Color(0xFFB8860B),
+                            fontSize: 12,
+                          ),
+                        ),
+                      )
+                    else
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: (widget.symptoms ?? [])
+                            .map(
+                              (s) => Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
                                 ),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                s,
-                                style: const TextStyle(
-                                  color: Color(0xFFB8860B),
-                                  fontSize: 12,
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: const Color(0xFFB8860B),
+                                    width: 0.5,
+                                  ),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  s,
+                                  style: const TextStyle(
+                                    color: Color(0xFFB8860B),
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ),
-                            ),
-                          )
-                          .toList(),
-                    ),
+                            )
+                            .toList(),
+                      ),
                     const SizedBox(height: 32),
                     if (parsed.isNotEmpty) ...[
                       Container(
@@ -211,12 +264,18 @@ class _ResultScreenState extends State<ResultScreen> {
                       ),
                       const SizedBox(height: 16),
                       _card('☽ Ancient Remedy', parsed['remedy'] ?? ''),
+                      if (parsed['herbDescription'] != null) ...[
+                        const SizedBox(height: 16),
+                        _card('🌿 About This Herb', parsed['herbDescription']),
+                      ],
                       const SizedBox(height: 16),
                       _card(
                         '⚠ Seek a Healer If',
                         parsed['warning'] ?? '',
                         borderColor: Colors.orange,
                       ),
+                      const SizedBox(height: 24),
+                      _herbalistSection(herbName),
                     ] else ...[
                       Center(
                         child: Text(
@@ -238,6 +297,86 @@ class _ResultScreenState extends State<ResultScreen> {
                   ],
                 ),
               ),
+      ),
+    );
+  }
+
+  Widget _herbalistSection(String herbName) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          '📍 Nearby Herbalists',
+          style: TextStyle(
+            color: Color(0xFFB8860B),
+            fontSize: 13,
+            letterSpacing: 1,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...tunisianHerbalists.take(3).map((h) => _herbalistTile(h, herbName)),
+        const SizedBox(height: 20),
+        const Text(
+          '🛒 Order Online',
+          style: TextStyle(
+            color: Color(0xFFB8860B),
+            fontSize: 13,
+            letterSpacing: 1,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...onlineHerbalists.map((h) => _herbalistTile(h, herbName)),
+      ],
+    );
+  }
+
+  Widget _herbalistTile(Herbalist h, String herbName) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        border: Border.all(color: const Color(0xFFB8860B), width: 0.4),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  h.name,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  h.city,
+                  style: const TextStyle(color: Colors.white38, fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+          if (h.isOnline)
+            TextButton(
+              onPressed: () => _openLink(h.searchUrlForHerb(herbName)),
+              child: const Text(
+                'Find it →',
+                style: TextStyle(color: Color(0xFFB8860B), fontSize: 12),
+              ),
+            )
+          else
+            TextButton(
+              onPressed: () => _openLink(h.mapsUrl),
+              child: const Text(
+                'Map →',
+                style: TextStyle(color: Color(0xFFB8860B), fontSize: 12),
+              ),
+            ),
+        ],
       ),
     );
   }

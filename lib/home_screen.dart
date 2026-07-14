@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'symptom_screen.dart';
+import 'history_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -15,13 +15,33 @@ class HomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 20),
-              const Text(
-                '⚗ Tar el Char',
-                style: TextStyle(
-                  color: Color(0xFFB8860B),
-                  fontSize: 22,
-                  letterSpacing: 3,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    '⚗ Tar el Char',
+                    style: TextStyle(
+                      color: Color(0xFFB8860B),
+                      fontSize: 22,
+                      letterSpacing: 3,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const HistoryScreen(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(
+                      Icons.auto_stories_outlined,
+                      color: Color(0xFFB8860B),
+                    ),
+                    tooltip: 'Your consultations',
+                  ),
+                ],
               ),
               const SizedBox(height: 8),
               const Text(
