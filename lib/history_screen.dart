@@ -118,6 +118,7 @@ class HistoryScreen extends StatelessWidget {
     final herbDescription = data['herbDescription'] as String?;
     final warning = data['warning'] as String? ?? '';
     final reflectionNote = data['reflectionNote'] as String?;
+    final rating = (data['rating'] as num?)?.toInt() ?? 0;
     final createdAt = data['createdAt'] as Timestamp?;
 
     String subtitle;
@@ -171,6 +172,7 @@ class HistoryScreen extends StatelessWidget {
                   ],
                 ),
               ),
+              if (rating > 0) _miniStars(rating),
               if (reflectionNote != null && reflectionNote.trim().isNotEmpty)
                 const Padding(
                   padding: EdgeInsets.only(left: 6),
@@ -189,12 +191,60 @@ class HistoryScreen extends StatelessWidget {
             ],
             const SizedBox(height: 10),
             _detailBlock('⚠ Warning', warning, color: Colors.orange),
+            if (rating > 0) ...[
+              const SizedBox(height: 10),
+              _ratingBlock(rating),
+            ],
             if (reflectionNote != null && reflectionNote.trim().isNotEmpty) ...[
               const SizedBox(height: 10),
               _reflectionBlock(reflectionNote),
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _miniStars(int rating) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(5, (i) {
+        final filled = i < rating;
+        return Icon(
+          filled ? Icons.star : Icons.star_border,
+          color: const Color(0xFFB8860B),
+          size: 12,
+        );
+      }),
+    );
+  }
+
+  Widget _ratingBlock(int rating) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '✦ Your Rating',
+            style: TextStyle(
+              color: Color(0xFFB8860B),
+              fontSize: 12,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: List.generate(5, (i) {
+              final filled = i < rating;
+              return Icon(
+                filled ? Icons.star : Icons.star_border,
+                color: const Color(0xFFB8860B),
+                size: 18,
+              );
+            }),
+          ),
+        ],
       ),
     );
   }
