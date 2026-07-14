@@ -117,6 +117,7 @@ class HistoryScreen extends StatelessWidget {
     final remedy = data['remedy'] as String? ?? '';
     final herbDescription = data['herbDescription'] as String?;
     final warning = data['warning'] as String? ?? '';
+    final reflectionNote = data['reflectionNote'] as String?;
     final createdAt = data['createdAt'] as Timestamp?;
 
     String subtitle;
@@ -170,6 +171,11 @@ class HistoryScreen extends StatelessWidget {
                   ],
                 ),
               ),
+              if (reflectionNote != null && reflectionNote.trim().isNotEmpty)
+                const Padding(
+                  padding: EdgeInsets.only(left: 6),
+                  child: Text('📝', style: TextStyle(fontSize: 13)),
+                ),
             ],
           ),
           childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -183,6 +189,51 @@ class HistoryScreen extends StatelessWidget {
             ],
             const SizedBox(height: 10),
             _detailBlock('⚠ Warning', warning, color: Colors.orange),
+            if (reflectionNote != null && reflectionNote.trim().isNotEmpty) ...[
+              const SizedBox(height: 10),
+              _reflectionBlock(reflectionNote),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _reflectionBlock(String content) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFB8860B).withValues(alpha: 0.06),
+          border: Border.all(
+            color: const Color(0xFFB8860B).withValues(alpha: 0.3),
+            width: 0.5,
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '📝 Your Reflection',
+              style: TextStyle(
+                color: Color(0xFFB8860B),
+                fontSize: 12,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              content,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 13,
+                height: 1.6,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
           ],
         ),
       ),
