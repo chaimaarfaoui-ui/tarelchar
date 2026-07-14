@@ -33,6 +33,10 @@ class _ResultScreenState extends State<ResultScreen> {
   bool _savingReflection = false;
   bool _reflectionSaved = false;
 
+  // Rating
+  int _rating = 0;
+  bool _savingRating = false;
+
   @override
   void dispose() {
     _reflectionController.dispose();
@@ -99,6 +103,7 @@ class _ResultScreenState extends State<ResultScreen> {
             'herbDescription': parsed['herbDescription'],
             'warning': parsed['warning'],
             'reflectionNote': '',
+            'rating': 0,
             'createdAt': FieldValue.serverTimestamp(),
           });
       setState(() {
@@ -154,6 +159,33 @@ class _ResultScreenState extends State<ResultScreen> {
           backgroundColor: Colors.red,
         ),
       );
+    }
+  }
+
+  Future<void> _saveRating(int stars) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || _consultationDocId == null) return;
+
+    setState(() {
+      _rating = stars;
+      _savingRating = true;
+    });
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('consultations')
+          .doc(_consultationDocId)
+          .update({'rating': stars, 'ratedAt': FieldValue.serverTimestamp()});
+    } catch (e) {
+      debugPrint('Failed to save rating: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _savingRating = false;
+        });
+      }
     }
   }
 
@@ -339,6 +371,8 @@ class _ResultScreenState extends State<ResultScreen> {
                         borderColor: Colors.orange,
                       ),
                       const SizedBox(height: 24),
+                      _ratingSection(),
+                      const SizedBox(height: 24),
                       _herbalistSection(herbName),
                       const SizedBox(height: 24),
                       _reflectionSection(),
@@ -364,6 +398,43 @@ class _ResultScreenState extends State<ResultScreen> {
                 ),
               ),
       ),
+    );
+  }
+
+  Widget _ratingSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          '✦ Was the Oracle Wise?',
+          style: TextStyle(
+            color: Color(0xFFB8860B),
+            fontSize: 13,
+            letterSpacing: 1,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Center(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(5, (i) {
+              final starIndex = i + 1;
+              final filled = starIndex <= _rating;
+              return IconButton(
+                onPressed: (_savingRating || _consultationDocId == null)
+                    ? null
+                    : () => _saveRating(starIndex),
+                icon: Icon(
+                  filled ? Icons.star : Icons.star_border,
+                  color: const Color(0xFFB8860B),
+                  size: 30,
+                ),
+                splashRadius: 24,
+              );
+            }),
+          ),
+        ),
+      ],
     );
   }
 
