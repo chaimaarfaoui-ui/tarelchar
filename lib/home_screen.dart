@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'symptom_screen.dart';
 import 'history_screen.dart';
+import 'app_locale.dart';
+import 'app_strings.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -18,35 +20,49 @@ class HomeScreen extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    '⚗ Tar el Char',
-                    style: TextStyle(
+                  Text(
+                    '⚗ ${AppStrings.t('appTitle')}',
+                    style: const TextStyle(
                       color: Color(0xFFB8860B),
                       fontSize: 22,
                       letterSpacing: 3,
                     ),
                   ),
-                  IconButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const HistoryScreen(),
+                  Row(
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          AppLocale.toggle();
+                        },
+                        icon: const Icon(
+                          Icons.language,
+                          color: Color(0xFFB8860B),
                         ),
-                      );
-                    },
-                    icon: const Icon(
-                      Icons.auto_stories_outlined,
-                      color: Color(0xFFB8860B),
-                    ),
-                    tooltip: 'Your consultations',
+                        tooltip: AppLocale.isArabic ? 'English' : 'العربية',
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const HistoryScreen(),
+                            ),
+                          );
+                        },
+                        icon: const Icon(
+                          Icons.auto_stories_outlined,
+                          color: Color(0xFFB8860B),
+                        ),
+                        tooltip: AppStrings.t('yourConsultationsTooltip'),
+                      ),
+                    ],
                   ),
                 ],
               ),
               const SizedBox(height: 8),
-              const Text(
-                'What ails you today?',
-                style: TextStyle(color: Colors.white54, fontSize: 14),
+              Text(
+                AppStrings.t('whatAilsYou'),
+                style: const TextStyle(color: Colors.white54, fontSize: 14),
               ),
               const SizedBox(height: 60),
               Center(
@@ -57,18 +73,18 @@ class HomeScreen extends StatelessWidget {
                       style: TextStyle(color: Color(0xFFB8860B), fontSize: 60),
                     ),
                     const SizedBox(height: 32),
-                    const Text(
-                      'The Grimoire Awaits',
-                      style: TextStyle(
+                    Text(
+                      AppStrings.t('theGrimoireAwaits'),
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 24,
                         letterSpacing: 2,
                       ),
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'Speak your affliction and receive\nancient wisdom and modern guidance',
-                      style: TextStyle(
+                    Text(
+                      AppStrings.t('grimoireAwaitsSubtitle'),
+                      style: const TextStyle(
                         color: Colors.white38,
                         fontSize: 14,
                         height: 1.8,
@@ -94,9 +110,9 @@ class HomeScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: const Text(
-                          'Consult the Grimoire',
-                          style: TextStyle(
+                        child: Text(
+                          AppStrings.t('consultGrimoireButton'),
+                          style: const TextStyle(
                             color: Colors.black,
                             fontSize: 16,
                             letterSpacing: 2,
