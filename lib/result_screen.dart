@@ -5,6 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'herbalists.dart';
+import 'app_locale.dart';
+import 'app_strings.dart';
 
 class ResultScreen extends StatefulWidget {
   final String mode; // 'symptoms' or 'medicine'
@@ -52,8 +54,16 @@ class _ResultScreenState extends State<ResultScreen> {
   Future<void> _callGroq() async {
     try {
       final Map<String, dynamic> body = widget.mode == 'medicine'
-          ? {'mode': 'medicine', 'medicine': widget.medicine ?? ''}
-          : {'mode': 'symptoms', 'symptoms': widget.symptoms ?? []};
+          ? {
+              'mode': 'medicine',
+              'medicine': widget.medicine ?? '',
+              'language': AppLocale.languageCode.value,
+            }
+          : {
+              'mode': 'symptoms',
+              'symptoms': widget.symptoms ?? [],
+              'language': AppLocale.languageCode.value,
+            };
 
       final response = await http.post(
         Uri.parse('https://tar-el-char-api.vercel.app/api/consult-oracle'),
@@ -96,6 +106,7 @@ class _ResultScreenState extends State<ResultScreen> {
             'mode': widget.mode,
             'symptoms': widget.symptoms,
             'medicine': widget.medicine,
+            'language': AppLocale.languageCode.value,
             'triage': parsed['triage'],
             'guidance': parsed['guidance'],
             'remedy': parsed['remedy'],
@@ -142,9 +153,9 @@ class _ResultScreenState extends State<ResultScreen> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Your reflection has been sealed in the grimoire.'),
-          backgroundColor: Color(0xFFB8860B),
+        SnackBar(
+          content: Text(AppStrings.t('sealedInGrimoire')),
+          backgroundColor: const Color(0xFFB8860B),
         ),
       );
     } catch (e) {
@@ -154,8 +165,8 @@ class _ResultScreenState extends State<ResultScreen> {
         _savingReflection = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('The grimoire would not accept your words. Try again.'),
+        SnackBar(
+          content: Text(AppStrings.t('reflectionSaveError')),
           backgroundColor: Colors.red,
         ),
       );
@@ -234,9 +245,9 @@ class _ResultScreenState extends State<ResultScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF0D0D0D),
         iconTheme: const IconThemeData(color: Color(0xFFB8860B)),
-        title: const Text(
-          'The Oracle Speaks',
-          style: TextStyle(
+        title: Text(
+          AppStrings.t('theOracleSpeaks'),
+          style: const TextStyle(
             color: Color(0xFFB8860B),
             fontSize: 16,
             letterSpacing: 2,
@@ -246,15 +257,15 @@ class _ResultScreenState extends State<ResultScreen> {
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: _loading
-            ? const Center(
+            ? Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CircularProgressIndicator(color: Color(0xFFB8860B)),
-                    SizedBox(height: 24),
+                    const CircularProgressIndicator(color: Color(0xFFB8860B)),
+                    const SizedBox(height: 24),
                     Text(
-                      'The grimoire stirs...',
-                      style: TextStyle(
+                      AppStrings.t('theGrimoireStirs'),
+                      style: const TextStyle(
                         color: Color(0xFFB8860B),
                         letterSpacing: 2,
                       ),
@@ -268,8 +279,8 @@ class _ResultScreenState extends State<ResultScreen> {
                   children: [
                     Text(
                       widget.mode == 'medicine'
-                          ? 'Your inquiry'
-                          : 'Your afflictions',
+                          ? AppStrings.t('yourInquiry')
+                          : AppStrings.t('yourAfflictions'),
                       style: const TextStyle(
                         color: Colors.white38,
                         fontSize: 13,
@@ -355,18 +366,24 @@ class _ResultScreenState extends State<ResultScreen> {
                       ),
                       const SizedBox(height: 20),
                       _card(
-                        '⚗ The Oracle\'s Guidance',
+                        AppStrings.t('oracleGuidance'),
                         parsed['guidance'] ?? '',
                       ),
                       const SizedBox(height: 16),
-                      _card('☽ Ancient Remedy', parsed['remedy'] ?? ''),
+                      _card(
+                        AppStrings.t('ancientRemedy'),
+                        parsed['remedy'] ?? '',
+                      ),
                       if (parsed['herbDescription'] != null) ...[
                         const SizedBox(height: 16),
-                        _card('🌿 About This Herb', parsed['herbDescription']),
+                        _card(
+                          AppStrings.t('aboutThisHerb'),
+                          parsed['herbDescription'],
+                        ),
                       ],
                       const SizedBox(height: 16),
                       _card(
-                        '⚠ Seek a Healer If',
+                        AppStrings.t('seekHealerIf'),
                         parsed['warning'] ?? '',
                         borderColor: Colors.orange,
                       ),
@@ -385,9 +402,9 @@ class _ResultScreenState extends State<ResultScreen> {
                       ),
                     ],
                     const SizedBox(height: 32),
-                    const Text(
-                      '✦ This is not medical advice. Always consult a qualified healer for serious concerns.',
-                      style: TextStyle(
+                    Text(
+                      AppStrings.t('notMedicalAdvice'),
+                      style: const TextStyle(
                         color: Colors.white24,
                         fontSize: 11,
                         height: 1.6,
@@ -405,9 +422,9 @@ class _ResultScreenState extends State<ResultScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          '✦ Was the Oracle Wise?',
-          style: TextStyle(
+        Text(
+          AppStrings.t('wasOracleWise'),
+          style: const TextStyle(
             color: Color(0xFFB8860B),
             fontSize: 13,
             letterSpacing: 1,
@@ -442,9 +459,9 @@ class _ResultScreenState extends State<ResultScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          '📝 Your Reflection',
-          style: TextStyle(
+        Text(
+          AppStrings.t('yourReflection'),
+          style: const TextStyle(
             color: Color(0xFFB8860B),
             fontSize: 13,
             letterSpacing: 1,
@@ -469,12 +486,11 @@ class _ResultScreenState extends State<ResultScreen> {
                 setState(() => _reflectionSaved = false);
               }
             },
-            decoration: const InputDecoration(
-              hintText:
-                  'How did this consultation serve you? What did you learn...',
-              hintStyle: TextStyle(color: Colors.white24, fontSize: 13),
+            decoration: InputDecoration(
+              hintText: AppStrings.t('reflectionHint'),
+              hintStyle: const TextStyle(color: Colors.white24, fontSize: 13),
               border: InputBorder.none,
-              contentPadding: EdgeInsets.all(16),
+              contentPadding: const EdgeInsets.all(16),
             ),
           ),
         ),
@@ -503,8 +519,8 @@ class _ResultScreenState extends State<ResultScreen> {
                   )
                 : Text(
                     _reflectionSaved
-                        ? '✦ Sealed in the Grimoire'
-                        : 'Seal Reflection',
+                        ? AppStrings.t('sealedInGrimoire')
+                        : AppStrings.t('sealReflection'),
                     style: const TextStyle(
                       color: Color(0xFFB8860B),
                       fontSize: 13,
@@ -521,9 +537,9 @@ class _ResultScreenState extends State<ResultScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          '📍 Nearby Herbalists',
-          style: TextStyle(
+        Text(
+          AppStrings.t('nearbyHerbalists'),
+          style: const TextStyle(
             color: Color(0xFFB8860B),
             fontSize: 13,
             letterSpacing: 1,
@@ -532,9 +548,9 @@ class _ResultScreenState extends State<ResultScreen> {
         const SizedBox(height: 12),
         ...tunisianHerbalists.take(3).map((h) => _herbalistTile(h, herbName)),
         const SizedBox(height: 20),
-        const Text(
-          '🛒 Order Online',
-          style: TextStyle(
+        Text(
+          AppStrings.t('orderOnline'),
+          style: const TextStyle(
             color: Color(0xFFB8860B),
             fontSize: 13,
             letterSpacing: 1,
@@ -579,17 +595,17 @@ class _ResultScreenState extends State<ResultScreen> {
           if (h.isOnline)
             TextButton(
               onPressed: () => _openLink(h.searchUrlForHerb(herbName)),
-              child: const Text(
-                'Find it →',
-                style: TextStyle(color: Color(0xFFB8860B), fontSize: 12),
+              child: Text(
+                AppStrings.t('findIt'),
+                style: const TextStyle(color: Color(0xFFB8860B), fontSize: 12),
               ),
             )
           else
             TextButton(
               onPressed: () => _openLink(h.mapsUrl),
-              child: const Text(
-                'Map →',
-                style: TextStyle(color: Color(0xFFB8860B), fontSize: 12),
+              child: Text(
+                AppStrings.t('map'),
+                style: const TextStyle(color: Color(0xFFB8860B), fontSize: 12),
               ),
             ),
         ],

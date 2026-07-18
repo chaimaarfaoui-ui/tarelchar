@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'app_strings.dart';
 
 class HistoryScreen extends StatelessWidget {
   const HistoryScreen({super.key});
@@ -42,9 +43,9 @@ class HistoryScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFF0D0D0D),
         iconTheme: const IconThemeData(color: Color(0xFFB8860B)),
-        title: const Text(
-          'The Grimoire Remembers',
-          style: TextStyle(
+        title: Text(
+          AppStrings.t('grimoireRemembers'),
+          style: const TextStyle(
             color: Color(0xFFB8860B),
             fontSize: 16,
             letterSpacing: 2,
@@ -52,10 +53,10 @@ class HistoryScreen extends StatelessWidget {
         ),
       ),
       body: user == null
-          ? const Center(
+          ? Center(
               child: Text(
-                'Sign in to view your consultations.',
-                style: TextStyle(color: Colors.white54),
+                AppStrings.t('signInToView'),
+                style: const TextStyle(color: Colors.white54),
               ),
             )
           : StreamBuilder<QuerySnapshot>(
@@ -75,7 +76,7 @@ class HistoryScreen extends StatelessWidget {
                 if (snapshot.hasError) {
                   return Center(
                     child: Text(
-                      'The grimoire is silent: ${snapshot.error}',
+                      '${AppStrings.t('grimoireSilent')}: ${snapshot.error}',
                       style: const TextStyle(color: Colors.white54),
                       textAlign: TextAlign.center,
                     ),
@@ -85,12 +86,15 @@ class HistoryScreen extends StatelessWidget {
                 final docs = snapshot.data?.docs ?? [];
 
                 if (docs.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Padding(
-                      padding: EdgeInsets.all(32),
+                      padding: const EdgeInsets.all(32),
                       child: Text(
-                        'No consultations yet.\nYour past inquiries will appear here.',
-                        style: TextStyle(color: Colors.white38, fontSize: 14),
+                        AppStrings.t('noConsultationsYet'),
+                        style: const TextStyle(
+                          color: Colors.white38,
+                          fontSize: 14,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -182,15 +186,19 @@ class HistoryScreen extends StatelessWidget {
           ),
           childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           children: [
-            _detailBlock('⚗ Guidance', guidance),
+            _detailBlock(AppStrings.t('historyGuidance'), guidance),
             const SizedBox(height: 10),
-            _detailBlock('☽ Remedy', remedy),
+            _detailBlock(AppStrings.t('historyRemedy'), remedy),
             if (herbDescription != null && herbDescription.isNotEmpty) ...[
               const SizedBox(height: 10),
-              _detailBlock('🌿 About the Herb', herbDescription),
+              _detailBlock(AppStrings.t('historyHerbInfo'), herbDescription),
             ],
             const SizedBox(height: 10),
-            _detailBlock('⚠ Warning', warning, color: Colors.orange),
+            _detailBlock(
+              AppStrings.t('historyWarning'),
+              warning,
+              color: Colors.orange,
+            ),
             if (rating > 0) ...[
               const SizedBox(height: 10),
               _ratingBlock(rating),
@@ -225,9 +233,9 @@ class HistoryScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '✦ Your Rating',
-            style: TextStyle(
+          Text(
+            AppStrings.t('yourRating'),
+            style: const TextStyle(
               color: Color(0xFFB8860B),
               fontSize: 12,
               letterSpacing: 0.5,
@@ -266,9 +274,9 @@ class HistoryScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              '📝 Your Reflection',
-              style: TextStyle(
+            Text(
+              AppStrings.t('yourReflection'),
+              style: const TextStyle(
                 color: Color(0xFFB8860B),
                 fontSize: 12,
                 letterSpacing: 0.5,

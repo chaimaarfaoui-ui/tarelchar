@@ -1,6 +1,7 @@
 import 'home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'app_strings.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -21,7 +22,7 @@ class _AuthScreenState extends State<AuthScreen> {
     final password = _passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      setState(() => _errorMessage = 'Please enter both email and password.');
+      setState(() => _errorMessage = AppStrings.t('errorBothFields'));
       return;
     }
 
@@ -54,7 +55,7 @@ class _AuthScreenState extends State<AuthScreen> {
       });
     } catch (e) {
       setState(() {
-        _errorMessage = 'Something went wrong. Please try again.';
+        _errorMessage = AppStrings.t('errorGeneric');
       });
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -86,9 +87,9 @@ class _AuthScreenState extends State<AuthScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Recover Your Path',
-                      style: TextStyle(
+                    Text(
+                      AppStrings.t('recoverYourPath'),
+                      style: const TextStyle(
                         color: Color(0xFFB8860B),
                         fontSize: 18,
                         letterSpacing: 1,
@@ -98,7 +99,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     if (emailSent) ...[
                       const SizedBox(height: 8),
                       Text(
-                        'A reset link has been sent to ${resetEmailController.text.trim()}. Check your inbox.',
+                        '${AppStrings.t('resetLinkSentPrefix')}${resetEmailController.text.trim()}${AppStrings.t('resetLinkSentSuffix')}',
                         style: const TextStyle(
                           color: Colors.white70,
                           fontSize: 13,
@@ -110,23 +111,26 @@ class _AuthScreenState extends State<AuthScreen> {
                         alignment: Alignment.centerRight,
                         child: TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: const Text(
-                            'Close',
-                            style: TextStyle(color: Color(0xFFB8860B)),
+                          child: Text(
+                            AppStrings.t('close'),
+                            style: const TextStyle(color: Color(0xFFB8860B)),
                           ),
                         ),
                       ),
                     ] else ...[
-                      const Text(
-                        'Enter your email and we will send you a link to reset your password.',
-                        style: TextStyle(color: Colors.white38, fontSize: 13),
+                      Text(
+                        AppStrings.t('recoverInstructions'),
+                        style: const TextStyle(
+                          color: Colors.white38,
+                          fontSize: 13,
+                        ),
                       ),
                       const SizedBox(height: 20),
                       TextField(
                         controller: resetEmailController,
                         style: const TextStyle(color: Colors.white),
                         decoration: InputDecoration(
-                          hintText: 'Email',
+                          hintText: AppStrings.t('emailHint'),
                           hintStyle: const TextStyle(color: Colors.white38),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -161,9 +165,9 @@ class _AuthScreenState extends State<AuthScreen> {
                             onPressed: dialogLoading
                                 ? null
                                 : () => Navigator.pop(context),
-                            child: const Text(
-                              'Cancel',
-                              style: TextStyle(color: Colors.white38),
+                            child: Text(
+                              AppStrings.t('cancel'),
+                              style: const TextStyle(color: Colors.white38),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -175,8 +179,9 @@ class _AuthScreenState extends State<AuthScreen> {
                                         .trim();
                                     if (resetEmail.isEmpty) {
                                       setDialogState(() {
-                                        dialogError =
-                                            'Please enter your email.';
+                                        dialogError = AppStrings.t(
+                                          'errorEmailRequired',
+                                        );
                                       });
                                       return;
                                     }
@@ -200,8 +205,9 @@ class _AuthScreenState extends State<AuthScreen> {
                                       });
                                     } catch (e) {
                                       setDialogState(() {
-                                        dialogError =
-                                            'Something went wrong. Please try again.';
+                                        dialogError = AppStrings.t(
+                                          'errorGeneric',
+                                        );
                                         dialogLoading = false;
                                       });
                                     }
@@ -221,9 +227,9 @@ class _AuthScreenState extends State<AuthScreen> {
                                       strokeWidth: 2,
                                     ),
                                   )
-                                : const Text(
-                                    'Send Link',
-                                    style: TextStyle(color: Colors.black),
+                                : Text(
+                                    AppStrings.t('sendLink'),
+                                    style: const TextStyle(color: Colors.black),
                                   ),
                           ),
                         ],
@@ -242,19 +248,19 @@ class _AuthScreenState extends State<AuthScreen> {
   String _friendlyError(String code) {
     switch (code) {
       case 'user-not-found':
-        return 'No account found with that email.';
+        return AppStrings.t('errorUserNotFound');
       case 'wrong-password':
-        return 'Incorrect password.';
+        return AppStrings.t('errorWrongPassword');
       case 'email-already-in-use':
-        return 'An account already exists with that email.';
+        return AppStrings.t('errorEmailInUse');
       case 'invalid-email':
-        return 'That email address looks invalid.';
+        return AppStrings.t('errorInvalidEmail');
       case 'weak-password':
-        return 'Password should be at least 6 characters.';
+        return AppStrings.t('errorWeakPassword');
       case 'invalid-credential':
-        return 'Incorrect email or password.';
+        return AppStrings.t('errorInvalidCredential');
       default:
-        return 'Authentication failed. Please try again.';
+        return AppStrings.t('errorAuthFailed');
     }
   }
 
@@ -272,7 +278,9 @@ class _AuthScreenState extends State<AuthScreen> {
               const Text('⚗', style: TextStyle(fontSize: 40)),
               const SizedBox(height: 24),
               Text(
-                _isLogin ? 'Welcome Back' : 'Enter the Grimoire',
+                _isLogin
+                    ? AppStrings.t('welcomeBack')
+                    : AppStrings.t('enterGrimoire'),
                 style: const TextStyle(
                   color: Color(0xFFB8860B),
                   fontSize: 28,
@@ -282,8 +290,8 @@ class _AuthScreenState extends State<AuthScreen> {
               const SizedBox(height: 8),
               Text(
                 _isLogin
-                    ? 'Sign in to continue your journey'
-                    : 'Create your account to begin',
+                    ? AppStrings.t('signInSubtitle')
+                    : AppStrings.t('createAccountSubtitle'),
                 style: const TextStyle(color: Colors.white38, fontSize: 14),
               ),
               const SizedBox(height: 48),
@@ -291,7 +299,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 controller: _emailController,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
-                  hintText: 'Email',
+                  hintText: AppStrings.t('emailHint'),
                   hintStyle: const TextStyle(color: Colors.white38),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -312,7 +320,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 obscureText: true,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
-                  hintText: 'Password',
+                  hintText: AppStrings.t('passwordHint'),
                   hintStyle: const TextStyle(color: Colors.white38),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -333,9 +341,12 @@ class _AuthScreenState extends State<AuthScreen> {
                   alignment: Alignment.centerRight,
                   child: GestureDetector(
                     onTap: _showForgotPasswordDialog,
-                    child: const Text(
-                      'Forgot password?',
-                      style: TextStyle(color: Colors.white38, fontSize: 13),
+                    child: Text(
+                      AppStrings.t('forgotPassword'),
+                      style: const TextStyle(
+                        color: Colors.white38,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
                 ),
@@ -369,7 +380,9 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                         )
                       : Text(
-                          _isLogin ? 'Sign In' : 'Create Account',
+                          _isLogin
+                              ? AppStrings.t('signIn')
+                              : AppStrings.t('createAccount'),
                           style: const TextStyle(
                             color: Colors.black,
                             fontSize: 16,
@@ -387,8 +400,8 @@ class _AuthScreenState extends State<AuthScreen> {
                   }),
                   child: Text(
                     _isLogin
-                        ? "Don't have an account? Sign Up"
-                        : 'Already have an account? Sign In',
+                        ? AppStrings.t('noAccountSignUp')
+                        : AppStrings.t('alreadyHaveAccount'),
                     style: const TextStyle(
                       color: Color(0xFFB8860B),
                       fontSize: 14,
